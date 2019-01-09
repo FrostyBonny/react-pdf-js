@@ -50,14 +50,34 @@ export default class ReactPdfJs extends Component {
   }
 
   componentWillReceiveProps(newProps) {
-    const { page, scale } = this.props;
+    const { 
+	  page, 
+	  scale, 
+	  file:oldfile,
+      onDocumentComplete,
+      cMapUrl,
+      cMapPacked, 
+	} = this.props;
     const { pdf } = this.state;
-    if (newProps.page !== page) {
-      pdf.getPage(newProps.page).then(p => this.drawPDF(p));
-    }
-    if (newProps.scale !== scale) {
-      pdf.getPage(newProps.page).then(p => this.drawPDF(p));
-    }
+	const { file:newfile } = newProps;
+	if(newfile !== oldfile){
+		PdfJsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.0.943/pdf.worker.js';
+		PdfJsLib.getDocument({ url: newfile, cMapUrl, cMapPacked }).then((newPdf) => {
+		  this.setState({ pdf:newPdf });
+		  if (onDocumentComplete) {
+			onDocumentComplete(newPdf._pdfInfo.numPages); // eslint-disable-line
+		  }
+		  pdf.getPage(page).then(p => this.drawPDF(p));
+		});
+	}else{
+		if (newProps.page !== page) {
+		  pdf.getPage(newProps.page).then(p => this.drawPDF(p));
+		}
+		if (newProps.scale !== scale) {
+		  pdf.getPage(newProps.page).then(p => this.drawPDF(p));
+		}
+	}
+    
   }
 
   drawPDF = (page) => {
